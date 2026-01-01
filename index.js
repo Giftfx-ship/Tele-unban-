@@ -1,5 +1,6 @@
 require("dotenv").config();
 const { Telegraf, Markup } = require("telegraf");
+const express = require("express");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const state = new Map();
@@ -173,6 +174,12 @@ bot.on("text", (ctx) => {
         ],
         [
           Markup.button.callback("🔁 Generate Another Appeal", "RETRY")
+        ],
+        [
+          Markup.button.url(
+            "💬 Chat with MrDev",
+            "https://t.me/MrDdev"
+          )
         ]
       ])
     }
@@ -215,6 +222,12 @@ bot.action("RETRY", (ctx) => {
         ],
         [
           Markup.button.callback("🔁 Generate Again", "RETRY")
+        ],
+        [
+          Markup.button.url(
+            "💬 Chat with MrDev",
+            "https://t.me/MrDdev"
+          )
         ]
       ])
     }
@@ -224,12 +237,23 @@ bot.action("RETRY", (ctx) => {
 });
 
 /* =====================
-   LAUNCH BOT
+   RENDER WEBHOOK SETUP
 ===================== */
 
-bot.launch();
-console.log("😈 WhatsApp Unban Appeal Bot is running...");
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Enable graceful stop
+// Webhook route
+app.use(bot.webhookCallback("/bot"));
+
+// Set webhook to Telegram
+bot.telegram.setWebhook(`https://mrdev-teleunban-bot.onrender.com/bot`);
+
+// Start Express server
+app.listen(PORT, () => {
+    console.log(`😈 WhatsApp Appeal Bot running on port ${PORT}`);
+});
+
+// Graceful shutdown
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
