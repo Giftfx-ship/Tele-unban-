@@ -3,257 +3,302 @@ const { Telegraf, Markup } = require("telegraf");
 const express = require("express");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const app = express();
 const state = new Map();
 
 /* =====================
    APPEAL TEMPLATES
 ===================== */
-
 const TEMP_APPEALS = [
 `Hello WhatsApp Support Team,
 
 My WhatsApp account (%PHONE%) was temporarily banned.
-I believe this restriction may have been applied in error.
+I believe this may have been an error.
 
-I respectfully request a review of my account.
-Thank you for your time.`,
+Kindly review my account.
+Thank you.`,
 
 `Dear WhatsApp Support,
 
 My account (%PHONE%) has been temporarily restricted.
-I rely on WhatsApp for important communication and always aim to follow your policies.
+I always try to follow WhatsApp policies.
 
-Kindly review my account.
+Please review my account.
 Thank you.`,
 
 `Hello WhatsApp Team,
 
 My WhatsApp account (%PHONE%) was temporarily blocked.
-If any violation occurred, it was unintentional.
+Any violation was unintentional.
 
-I kindly request a review.
-Best regards.`,
-
-`Hello Support Team,
-
-My account (%PHONE%) has been temporarily banned.
-I respectfully ask for a review, as I value WhatsApp and its guidelines.
-
-Thank you.`,
-
-`Dear WhatsApp Support Team,
-
-My WhatsApp account (%PHONE%) was temporarily banned without prior notice.
-I kindly request a review of this action.
-
-Thank you for your assistance.`
+I kindly request a review.`
 ];
 
 const PERM_APPEALS = [
 `Hello WhatsApp Support Team,
 
 My WhatsApp account (%PHONE%) has been permanently banned.
-I believe this may be a misunderstanding, as I have always used WhatsApp responsibly.
+I believe this may be a misunderstanding.
 
-I kindly request a careful review.
+Please review my account.
 Thank you.`,
 
 `Dear WhatsApp Support,
 
-I recently discovered that my account (%PHONE%) was permanently disabled.
-If any violation occurred, it was not intentional.
+My account (%PHONE%) was permanently disabled.
+I respectfully request a reconsideration.
 
-I respectfully request a review and reconsideration.
 Thank you.`,
 
 `Hello WhatsApp Team,
 
 My account (%PHONE%) has been permanently banned.
-I value WhatsApp greatly and would appreciate a full review of my account.
-
-Sincerely.`,
-
-`Hello Support Team,
-
-My WhatsApp account (%PHONE%) was permanently banned.
-I rely on this account for essential communication and respectfully request a review.
-
-Thank you.`,
-
-`Dear WhatsApp Support,
-
-I was surprised to learn that my account (%PHONE%) is permanently banned.
-I kindly ask for a review, as I believe this may have been an error.
-
-Thank you for your time.`
+I value WhatsApp and request a full review.`
 ];
 
 /* =====================
-   START COMMAND
+   TRUTH OR DARE (15 EACH)
 ===================== */
+const TRUTH = [
+  "Who is your secret crush right now?",
+  "Have you ever lied to someone you love?",
+  "What is your biggest fear?",
+  "Who was the last person you stalked on social media?",
+  "Have you ever cheated in an exam?",
+  "What is one thing you regret doing?",
+  "Who do you chat with the most on WhatsApp?",
+  "Have you ever had a crush on a friend?",
+  "What is your biggest insecurity?",
+  "Have you ever broken someone’s heart?",
+  "What is the most embarrassing thing that happened to you?",
+  "Who knows your biggest secret?",
+  "Have you ever pretended to like someone?",
+  "What bad habit are you trying to stop?",
+  "If you could change one thing about your past, what would it be?"
+];
 
+const DARE = [
+  "Send 😈 emoji to this chat",
+  "Type 'I am unstoppable 💪' and send",
+  "Change your Telegram name for 1 hour",
+  "Send a voice note saying 'I love myself'",
+  "Send 🔥🔥🔥 to the chat",
+  "Message someone 'You are amazing' right now",
+  "Send your mood using only emojis",
+  "Post 😂 emoji as your status",
+  "Send ❤️ to the group chat",
+  "Say 'No fear, only vibes 😎'",
+  "Send a funny sticker here",
+  "Type 'I believe in miracles' and send",
+  "Send 😎 emoji five times",
+  "Write one word that describes you",
+  "Say 'I accept this dare 😈'"
+];
+
+/* =====================
+   QUIZ (15)
+===================== */
+const QUIZ = [
+  { q: "WhatsApp is owned by?", a: "Meta" },
+  { q: "Country code +234 belongs to?", a: "Nigeria" },
+  { q: "Telegram founder?", a: "Pavel Durov" },
+  { q: "Capital city of Nigeria?", a: "Abuja" },
+  { q: "2 + 2 × 2 = ?", a: "6" },
+  { q: "Which planet is known as the Red Planet?", a: "Mars" },
+  { q: "HTML stands for?", a: "HyperText Markup Language" },
+  { q: "CSS is used for?", a: "Styling" },
+  { q: "Largest ocean in the world?", a: "Pacific" },
+  { q: "Fastest land animal?", a: "Cheetah" },
+  { q: "Who created Facebook?", a: "Mark Zuckerberg" },
+  { q: "What year did WhatsApp launch?", a: "2009" },
+  { q: "Android is owned by which company?", a: "Google" },
+  { q: "Capital of France?", a: "Paris" },
+  { q: "Smallest prime number?", a: "2" }
+];
+
+/* =====================
+   START MENU
+===================== */
 bot.start((ctx) => {
   state.delete(ctx.from.id);
-
   ctx.reply(
-    `😈 *WHATSAPP UNBAN APPEAL BOT*\n\n` +
-    `Restricted. Silenced. Cut off.\n` +
-    `Prepare your appeal the right way.\n\n` +
-    `Choose your ban type 👇`,
+    `😈 *WHATSAPP UNBAN APPEAL BOT PRO*\n\nChoose an option 👇`,
     {
       parse_mode: "Markdown",
       ...Markup.inlineKeyboard([
-        [
-          Markup.button.callback("⏳ TEMPORARY BAN", "TEMP"),
-          Markup.button.callback("⛔ PERMANENT BAN", "PERM")
-        ]
+        [Markup.button.callback("📱 Generate Appeal", "APPEAL")],
+        [Markup.button.callback("🎮 Game Center", "GAMES")],
+        [Markup.button.callback("🏷️ Tag All (Group)", "TAGALL")],
+        [Markup.button.callback("ℹ️ About Bot", "ABOUT")]
       ])
     }
   );
 });
 
 /* =====================
-   BAN TYPE HANDLER
+   ABOUT
 ===================== */
-
-bot.action(["TEMP", "PERM"], (ctx) => {
-  state.set(ctx.from.id, { banType: ctx.callbackQuery.data });
-
-  ctx.reply(
-    `📱 *Enter your WhatsApp number*\n` +
-    `_Include country code_\n\n` +
-    `Example:\n+2348012345678`,
-    { parse_mode: "Markdown" }
+bot.action("ABOUT", (ctx) => {
+  ctx.editMessageText(
+    `🤖 *ABOUT BOT*\n\n• Appeal Generator\n• Games\n• Tag All\n\n👨‍💻 Made by *Mr Dev*`,
+    {
+      parse_mode: "Markdown",
+      ...Markup.inlineKeyboard([[Markup.button.callback("⬅️ Back", "BACK")]])
+    }
   );
+  ctx.answerCbQuery();
+});
 
+bot.action("BACK", (ctx) => {
+  ctx.deleteMessage();
+  ctx.telegram.sendMessage(ctx.chat.id, "/start");
   ctx.answerCbQuery();
 });
 
 /* =====================
-   PHONE NUMBER HANDLER
+   APPEAL FLOW
 ===================== */
+bot.action("APPEAL", (ctx) => {
+  state.set(ctx.from.id, {});
+  ctx.reply(
+    `🚫 *Select Ban Type*`,
+    {
+      parse_mode: "Markdown",
+      ...Markup.inlineKeyboard([
+        [
+          Markup.button.callback("⏳ Temporary", "TEMP"),
+          Markup.button.callback("⛔ Permanent", "PERM")
+        ]
+      ])
+    }
+  );
+  ctx.answerCbQuery();
+});
 
+bot.action(["TEMP", "PERM"], (ctx) => {
+  state.set(ctx.from.id, { banType: ctx.callbackQuery.data });
+  ctx.reply(`📱 Enter WhatsApp number\nExample: +2348012345678`);
+  ctx.answerCbQuery();
+});
+
+/* =====================
+   GAME CENTER
+===================== */
+bot.action("GAMES", (ctx) => {
+  ctx.editMessageText(
+    `🎮 *GAME CENTER*`,
+    {
+      parse_mode: "Markdown",
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback("😈 Truth or Dare", "TOD")],
+        [Markup.button.callback("🎯 Lucky Guess", "GUESS")],
+        [Markup.button.callback("✊ Rock Paper Scissors", "RPS")],
+        [Markup.button.callback("🧠 Quiz", "QUIZ")],
+        [Markup.button.callback("⬅️ Back", "BACK")]
+      ])
+    }
+  );
+  ctx.answerCbQuery();
+});
+
+/* =====================
+   TRUTH OR DARE
+===================== */
+bot.action("TOD", (ctx) => {
+  ctx.reply(
+    `😈 *Truth or Dare*`,
+    {
+      parse_mode: "Markdown",
+      ...Markup.inlineKeyboard([
+        [
+          Markup.button.callback("🧠 Truth", "TRUTH"),
+          Markup.button.callback("🔥 Dare", "DARE")
+        ]
+      ])
+    }
+  );
+  ctx.answerCbQuery();
+});
+
+bot.action("TRUTH", (ctx) => {
+  ctx.reply(`🧠 *Truth*\n\n${TRUTH[Math.floor(Math.random() * TRUTH.length)]}`, { parse_mode: "Markdown" });
+  ctx.answerCbQuery();
+});
+
+bot.action("DARE", (ctx) => {
+  ctx.reply(`🔥 *Dare*\n\n${DARE[Math.floor(Math.random() * DARE.length)]}`, { parse_mode: "Markdown" });
+  ctx.answerCbQuery();
+});
+
+/* =====================
+   LUCKY GUESS
+===================== */
+bot.action("GUESS", (ctx) => {
+  state.set(ctx.from.id, { guess: Math.floor(Math.random() * 5) + 1 });
+  ctx.reply("🎯 Guess a number from 1 to 5");
+  ctx.answerCbQuery();
+});
+
+/* =====================
+   QUIZ
+===================== */
+bot.action("QUIZ", (ctx) => {
+  const q = QUIZ[Math.floor(Math.random() * QUIZ.length)];
+  state.set(ctx.from.id, { quiz: q.a });
+  ctx.reply(`🧠 *Quiz*\n\n${q.q}`, { parse_mode: "Markdown" });
+  ctx.answerCbQuery();
+});
+
+/* =====================
+   TAG ALL
+===================== */
+bot.action("TAGALL", async (ctx) => {
+  if (ctx.chat.type === "private") return ctx.reply("❌ Group only");
+  const admins = await ctx.getChatAdministrators();
+  if (!admins.some(a => a.user.id === ctx.from.id)) return ctx.reply("❌ Admin only");
+
+  const mentions = admins.map(a => `[${a.user.first_name}](tg://user?id=${a.user.id})`).join(" ");
+  ctx.reply(`📢 *TAG ALL*\n\n${mentions}`, { parse_mode: "Markdown" });
+});
+
+/* =====================
+   TEXT HANDLER
+===================== */
 bot.on("text", (ctx) => {
   const user = state.get(ctx.from.id);
   if (!user) return;
 
-  const phone = ctx.message.text.trim();
-  const appeals =
-    user.banType === "TEMP" ? TEMP_APPEALS : PERM_APPEALS;
+  if (user.guess) {
+    ctx.reply(ctx.message.text == user.guess ? "🎉 Correct!" : `❌ Wrong! It was ${user.guess}`);
+    state.delete(ctx.from.id);
+    return;
+  }
 
-  const appeal =
-    appeals[Math.floor(Math.random() * appeals.length)]
-      .replace("%PHONE%", phone);
+  if (user.quiz) {
+    ctx.reply(ctx.message.text.toLowerCase() === user.quiz.toLowerCase()
+      ? "✅ Correct!"
+      : `❌ Wrong! Answer: ${user.quiz}`);
+    state.delete(ctx.from.id);
+    return;
+  }
 
-  state.set(ctx.from.id, {
-    banType: user.banType,
-    phone
-  });
-
-  ctx.reply(
-    `🔥 *APPEAL PREPARED SUCCESSFULLY*\n\n` +
-    "```\n" +
-    appeal +
-    "\n```\n\n" +
-    `📤 *Next Step*\n` +
-    `Submit this appeal using WhatsApp’s official review system.\n\n` +
-    `⏳ *What Happens Next*\n` +
-    `• WhatsApp reviews your request\n` +
-    `• Response usually takes 24–72 hours\n` +
-    `• Final decision is made by WhatsApp\n\n` +
-    `—\n` +
-    `👨‍💻 *Made by Mr Dev*`,
-    {
-      parse_mode: "Markdown",
-      ...Markup.inlineKeyboard([
-        [
-          Markup.button.url(
-            "📤 Submit Appeal (Official)",
-            "https://www.whatsapp.com/contact/"
-          )
-        ],
-        [
-          Markup.button.callback("🔁 Generate Another Appeal", "RETRY")
-        ],
-        [
-          Markup.button.url(
-            "💬 Chat with MrDev",
-            "https://t.me/MrDdev"
-          )
-        ]
-      ])
-    }
-  );
+  if (user.banType) {
+    const phone = ctx.message.text.trim();
+    const list = user.banType === "TEMP" ? TEMP_APPEALS : PERM_APPEALS;
+    const appeal = list[Math.floor(Math.random() * list.length)].replace("%PHONE%", phone);
+    ctx.reply(`🔥 *APPEAL GENERATED*\n\n\`\`\`\n${appeal}\n\`\`\``, { parse_mode: "Markdown" });
+    state.delete(ctx.from.id);
+  }
 });
 
 /* =====================
-   RETRY HANDLER
+   WEBHOOK
 ===================== */
-
-bot.action("RETRY", (ctx) => {
-  const user = state.get(ctx.from.id);
-  if (!user) return ctx.answerCbQuery();
-
-  const appeals =
-    user.banType === "TEMP" ? TEMP_APPEALS : PERM_APPEALS;
-
-  const newAppeal =
-    appeals[Math.floor(Math.random() * appeals.length)]
-      .replace("%PHONE%", user.phone);
-
-  ctx.editMessageText(
-    `🔥 *NEW APPEAL PREPARED*\n\n` +
-    "```\n" +
-    newAppeal +
-    "\n```\n\n" +
-    `📤 *Next Step*\n` +
-    `Submit this appeal using WhatsApp’s official review system.\n\n` +
-    `⏳ *Review handled by WhatsApp*\n\n` +
-    `—\n` +
-    `👨‍💻 *Made by Mr Dev*`,
-    {
-      parse_mode: "Markdown",
-      ...Markup.inlineKeyboard([
-        [
-          Markup.button.url(
-            "📤 Submit Appeal (Official)",
-            "https://www.whatsapp.com/contact/"
-          )
-        ],
-        [
-          Markup.button.callback("🔁 Generate Again", "RETRY")
-        ],
-        [
-          Markup.button.url(
-            "💬 Chat with MrDev",
-            "https://t.me/MrDdev"
-          )
-        ]
-      ])
-    }
-  );
-
-  ctx.answerCbQuery();
-});
-
-/* =====================
-   RENDER WEBHOOK SETUP
-===================== */
-
-const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Webhook route
 app.use(bot.webhookCallback("/bot"));
+bot.telegram.setWebhook(`${process.env.WEBHOOK_URL}/bot`);
 
-// Set webhook to Telegram
-bot.telegram.setWebhook(`https://mrdev-teleunban-bot.onrender.com/bot`);
+app.listen(PORT, () => console.log("🔥 Bot running"));
 
-// Start Express server
-app.listen(PORT, () => {
-    console.log(`😈 WhatsApp Appeal Bot running on port ${PORT}`);
-});
-
-// Graceful shutdown
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
