@@ -292,13 +292,23 @@ bot.on("text", (ctx) => {
 });
 
 /* =====================
-   WEBHOOK
+   WEBHOOK (HARDCODED)
 ===================== */
 const PORT = process.env.PORT || 3000;
-app.use(bot.webhookCallback("/bot"));
-bot.telegram.setWebhook(`${process.env.WEBHOOK_URL}/bot`);
+const WEBHOOK_URL = "https://mrdev-teleunban-bot.onrender.com";
 
-app.listen(PORT, () => console.log("🔥 Bot running"));
+app.use(express.json());
+app.use(bot.webhookCallback("/bot"));
+
+bot.launch({
+  webhook: {
+    domain: WEBHOOK_URL,
+    port: PORT,
+    hookPath: "/bot"
+  }
+})
+.then(() => console.log("🔥 Bot running (Webhook mode)"))
+.catch(err => console.error("❌ Webhook error:", err));
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
